@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DealScout – Supermarkt Aktionen Österreich</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #eeede8;
+    --border: rgba(0,0,0,0.08);
+    --text: #1a1a18;
+    --text2: #6b6b66;
+    --text3: #a0a09a;
+    --green: #2d6a4f;
+    --green-bg: #d8f3dc;
+    --green-mid: #52b788;
+    --amber: #7d4e00;
+    --amber-bg: #fff3cd;
+    --red: #a32d2d;
+    --red-bg: #fde8e8;
+    --blue: #1a4d8f;
+    --blue-bg: #dbeafe;
+    --accent: #2d6a4f;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--text);
+  }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--green-bg);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .plz-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    width: 80px;
+    color: var(--text);
+    outline: none;
+  }
+  .plz-input:focus { border-color: var(--green-mid); }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    transition: background .3s;
+  }
+  .status-dot.online { background: var(--green-mid); }
+  .status-dot.error { background: var(--red); }
+  .status-label { font-size: 12px; color: var(--text3); }
+
+  /* Nav */
+  .nav {
+    display: flex;
+    gap: 2px;
+    padding: 12px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+  }
+  .nav-btn {
+    padding: 8px 16px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-btn.active { color: var(--green); border-bottom-color: var(--green); }
+  .nav-btn:hover:not(.active) { color: var(--text); }
+  .nav-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+
+  /* Layout */
+  .main { max-width: 720px; margin: 0 auto; padding: 20px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 12px;
+  }
+
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .metric {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+  .metric-value { font-size: 24px; font-weight: 600; color: var(--text); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.amber { color: var(--amber); }
+
+  /* Store filters */
+  .store-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .store-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .store-pill.active { background: var(--green-bg); color: var(--green); border-color: var(--green-mid); }
+  .store-pill:hover:not(.active) { border-color: var(--text3); }
+
+  /* Deal rows */
+  .deal-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  .deal-row:last-child { border-bottom: none; }
+  .deal-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    background: var(--surface2);
+  }
+  .deal-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .deal-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .deal-info { flex: 1; min-width: 0; }
+  .deal-prices { text-align: right; flex-shrink: 0; }
+  .price-now { font-size: 15px; font-weight: 600; color: var(--green); }
+  .price-was { font-size: 12px; color: var(--text3); text-decoration: line-through; }
+  .badge {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 7px; border-radius: 20px;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+
+  /* Search */
+  .search-row {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--green-mid); background: var(--surface); }
+  .search-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 9px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .search-btn:hover { opacity: .85; }
+  .search-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Shopping list */
+  .list-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .list-input-row input, .list-input-row select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+  }
+  .list-input-row input { flex: 1; }
+  .list-input-row input:focus, .list-input-row select:focus { border-color: var(--green-mid); }
+  .add-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .list-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item-name { font-size: 14px; font-weight: 500; }
+  .list-item-cat { font-size: 12px; color: var(--text3); }
+  .sale-tag { font-size: 11px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 2px 6px; border-radius: 20px; }
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-size: 16px; padding: 4px;
+    border-radius: 6px; transition: all .1s;
+  }
+  .del-btn:hover { color: var(--red); background: var(--red-bg); }
+
+  /* Tracker */
+  .tracker-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 80px 80px;
+    gap: 8px;
+    padding: 0 0 8px;
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tracker-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 80px 80px;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .tracker-row:last-child { border-bottom: none; }
+
+  /* Savings bars */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-wrap { flex: 1; background: var(--surface2); border-radius: 20px; height: 7px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 20px; background: var(--green-mid); }
+  .bar-saved { height: 100%; border-radius: 20px; background: var(--green); position: absolute; top: 0; left: 0; }
+
+  /* Alt products */
+  .alt-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .alt-row:last-child { border-bottom: none; }
+
+  /* Loading / empty */
+  .loading {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text3);
+    font-size: 13px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green-mid);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Notifications */
+  .notif { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .notif:last-child { border-bottom: none; }
+  .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-mid); margin-top: 5px; flex-shrink: 0; }
+  .notif-dot.read { background: var(--border); }
+  .notif-text { font-size: 13px; }
+  .notif-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* Error banner */
+  .error-banner {
+    background: var(--amber-bg);
+    border: 1px solid #fbbf24;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  @media (max-width: 500px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .tracker-header, .tracker-row { grid-template-columns: 2fr 1fr 70px; }
+    .tracker-header > :last-child, .tracker-row > :last-child { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🏷</div>
+    DealScout
+  </div>
+  <div style="font-size:11px;color:var(--text3)">AT</div>
+  <div class="header-right">
+    <label style="font-size:12px;color:var(--text3)">PLZ</label>
+    <input class="plz-input" id="plz-input" value="1010" maxlength="4" placeholder="1010">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-label" id="status-label">Verbinde...</span>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showTab('deals',this)">🏷 Aktionen <span class="nav-badge" id="deals-count">–</span></button>
+  <button class="nav-btn" onclick="showTab('list',this)">📋 Einkaufsliste</button>
+  <button class="nav-btn" onclick="showTab('tracker',this)">📈 Tracker</button>
+  <button class="nav-btn" onclick="showTab('savings',this)">🐷 Ersparnisse</button>
+</nav>
+
+<main class="main">
+
+<!-- ── TAB: AKTIONEN ───────────────────────────────────────── -->
+<div id="tab-deals" class="tab active">
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Aktionen live</div><div class="metric-value" id="m-total">–</div></div>
+    <div class="metric"><div class="metric-label">Auf Liste</div><div class="metric-value green" id="m-list">–</div></div>
+    <div class="metric"><div class="metric-label">Ø Ersparnis</div><div class="metric-value amber" id="m-avg">–</div></div>
+  </div>
+
+  <div class="search-row">
+    <input class="search-input" id="search-input" placeholder="Produkt suchen... z.B. Milch, Butter, Brot" />
+    <button class="search-btn" id="search-btn" onclick="searchDeals()">Suchen</button>
+  </div>
+
+  <div class="error-banner" id="error-banner">
+    ⚠ Backend nicht erreichbar – Demo-Daten werden angezeigt.
+    <a href="https://dealscout.up.railway.app" target="_blank" style="color:var(--amber);text-decoration:underline;margin-left:6px">Status prüfen</a>
+  </div>
+
+  <div class="store-filters" id="store-filters">
+    <button class="store-pill active" onclick="filterStore(this,'alle')">Alle</button>
+    <button class="store-pill" onclick="filterStore(this,'billa')">Billa</button>
+    <button class="store-pill" onclick="filterStore(this,'spar')">Spar</button>
+    <button class="store-pill" onclick="filterStore(this,'hofer')">Hofer</button>
+    <button class="store-pill" onclick="filterStore(this,'lidl')">Lidl</button>
+    <button class="store-pill" onclick="filterStore(this,'penny')">Penny</button>
+    <button class="store-pill" onclick="filterStore(this,'obi')">OBI</button>
+  </div>
+
+  <div class="card">
+    <div id="deals-list"><div class="loading"><div class="spinner"></div>Lade Aktionen von Marktguru, Hofer &amp; Lidl...</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔔 Benachrichtigungen</div>
+    <div id="notif-list">
+      <div class="notif"><div class="notif-dot"></div><div><div class="notif-text">Suche nach einem Produkt um Aktionen zu sehen</div><div class="notif-time">Jetzt</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB: EINKAUFSLISTE ──────────────────────────────────── -->
+<div id="tab-list" class="tab">
+  <div class="card">
+    <div class="card-title">Produkt hinzufügen</div>
+    <div class="list-input-row">
+      <input type="text" id="list-input" placeholder="z.B. Milch, Butter, Brot..." />
+      <select id="cat-select">
+        <option value="Milchprodukte">Milchprodukte</option>
+        <option value="Fleisch & Fisch">Fleisch & Fisch</option>
+        <option value="Obst & Gemüse">Obst & Gemüse</option>
+        <option value="Brot & Backwaren">Brot & Backwaren</option>
+        <option value="Getränke">Getränke</option>
+        <option value="Tiefkühl">Tiefkühl</option>
+        <option value="Haushalt">Haushalt</option>
+        <option value="Sonstiges">Sonstiges</option>
+      </select>
+      <button class="add-btn" onclick="addListItem()">+ Hinzufügen</button>
+    </div>
+    <div id="shopping-list"></div>
+  </div>
+
+  <div class="card" id="list-deals-card" style="display:none">
+    <div class="card-title">🏷 Aktuelle Aktionen für deine Liste</div>
+    <div id="list-deals"></div>
+  </div>
+</div>
+
+<!-- ── TAB: TRACKER ────────────────────────────────────────── -->
+<div id="tab-tracker" class="tab">
+  <div class="card">
+    <div class="card-title">Aktionen für deine Produkte</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:12px">Suche nach Produkten um sie zu tracken</div>
+    <div class="tracker-header"><span>Produkt</span><span>Markt</span><span>Rabatt</span><span>Endet</span></div>
+    <div id="tracker-list"><div class="loading" style="padding:1rem 0">Noch keine Produkte gesucht</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Optimaler Einkaufstag</div>
+    <div id="week-planner"></div>
+  </div>
+</div>
+
+<!-- ── TAB: ERSPARNISSE ────────────────────────────────────── -->
+<div id="tab-savings" class="tab">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Gespart (Monat)</div><div class="metric-value green" id="s-saved">0,00€</div></div>
+    <div class="metric"><div class="metric-label">Ausgegeben</div><div class="metric-value" id="s-spent">0,00€</div></div>
+    <div class="metric"><div class="metric-label">Sparquote</div><div class="metric-value amber" id="s-rate">0%</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Wochenübersicht</div>
+    <div id="savings-bars"><div style="font-size:13px;color:var(--text3);padding:8px 0">Noch keine Einkäufe erfasst. Such nach Produkten und markiere genutzte Aktionen!</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔄 Günstigere Alternativen</div>
+    <div id="alt-products">
+      <div class="alt-row"><div style="font-size:20px">🔍</div><div style="font-size:13px;color:var(--text3)">Suche nach Produkten um günstigere Alternativen zu sehen</div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const BACKEND = 'https://dealscout.up.railway.app';
+
+let allDeals = [];
+let activeFilter = 'alle';
+let shoppingList = JSON.parse(localStorage.getItem('ds-list') || '[]');
+let savedDeals = JSON.parse(localStorage.getItem('ds-saved') || '[]');
+let searchHistory = JSON.parse(localStorage.getItem('ds-history') || '[]');
+
+// ── Backend health check ──────────────────────────────────────
+async function checkBackend() {
+  try {
+    const r = await fetch(BACKEND + '/', { signal: AbortSignal.timeout(5000) });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('status-dot').className = 'status-dot online';
+      document.getElementById('status-label').textContent = 'Live';
+      return true;
+    }
+  } catch {}
+  document.getElementById('status-dot').className = 'status-dot error';
+  document.getElementById('status-label').textContent = 'Offline';
+  document.getElementById('error-banner').style.display = 'block';
+  return false;
+}
+
+// ── Search ─────────────────────────────────────────────────────
+async function searchDeals() {
+  const q = document.getElementById('search-input').value.trim();
+  const zipCode = document.getElementById('plz-input').value.trim() || '1010';
+  const btn = document.getElementById('search-btn');
+
+  if (!q) { document.getElementById('search-input').focus(); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Suche...';
+  document.getElementById('deals-list').innerHTML = '<div class="loading"><div class="spinner"></div>Suche bei Marktguru, Hofer & Lidl...</div>';
+
+  try {
+    const r = await fetch(`${BACKEND}/api/deals?q=${encodeURIComponent(q)}&zipCode=${zipCode}`);
+    const data = await r.json();
+    allDeals = data.deals || [];
+
+    // add to history
+    if (!searchHistory.includes(q)) {
+      searchHistory.unshift(q);
+      searchHistory = searchHistory.slice(0, 20);
+      localStorage.setItem('ds-history', JSON.stringify(searchHistory));
+    }
+
+    updateTrackerFromDeals(allDeals, q);
+    addNotification(`${allDeals.length} Aktionen gefunden für "${q}"`, true);
+    renderDeals();
+    updateMetrics();
+    checkListMatches();
+  } catch (err) {
+    document.getElementById('deals-list').innerHTML = `<div class="loading">⚠ Fehler: ${err.message}<br><small style="color:var(--text3)">Prüfe ob das Backend läuft</small></div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Suchen';
+}
+
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchDeals();
+});
+document.getElementById('plz-input').addEventListener('change', () => {
+  if (allDeals.length) searchDeals();
+});
+
+// ── Render deals ──────────────────────────────────────────────
+const storeEmoji = { hofer:'🟠', lidl:'🔵', billa:'🟡', spar:'🟢', penny:'🔴', obi:'🟤', default:'🏪' };
+
+function renderDeals() {
+  const filtered = activeFilter === 'alle' ? allDeals
+    : allDeals.filter(d => (d.storeKey||d.store||'').toLowerCase().includes(activeFilter));
+
+  const el = document.getElementById('deals-list');
+  if (!filtered.length) {
+    el.innerHTML = '<div class="loading">Keine Aktionen für diesen Filter</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(d => {
+    const sk = (d.storeKey||d.store||'').toLowerCase();
+    const emoji = storeEmoji[sk] || storeEmoji.default;
+    const onList = shoppingList.some(i => d.name.toLowerCase().includes(i.name.toLowerCase()));
+    const validStr = d.validUntil ? `bis ${formatDate(d.validUntil)}` : '';
+    return `<div class="deal-row">
+      <div class="deal-icon">${emoji}</div>
+      <div class="deal-info">
+        <div class="deal-name">${d.name}</div>
+        <div class="deal-meta">${d.store || ''}${validStr ? ' · '+validStr : ''}${onList ? ' · <span class="sale-tag">Auf Liste ✓</span>' : ''}</div>
+      </div>
+      <div class="deal-prices">
+        <div class="price-now">${fmt(d.price)}€</div>
+        ${d.priceWas ? `<div class="price-was">${fmt(d.priceWas)}€</div>` : ''}
+      </div>
+      ${d.discountPct ? `<span class="badge badge-green">-${d.discountPct}%</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterStore(btn, key) {
+  activeFilter = key;
+  document.querySelectorAll('.store-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDeals();
+}
+
+// ── Metrics ───────────────────────────────────────────────────
+function updateMetrics() {
+  document.getElementById('m-total').textContent = allDeals.length;
+  document.getElementById('deals-count').textContent = allDeals.length;
+  const onList = allDeals.filter(d => shoppingList.some(i => d.name.toLowerCase().includes(i.name.toLowerCase()))).length;
+  document.getElementById('m-list').textContent = onList;
+  const withDisc = allDeals.filter(d => d.discountPct);
+  const avg = withDisc.length ? Math.round(withDisc.reduce((s,d)=>s+d.discountPct,0)/withDisc.length) : 0;
+  document.getElementById('m-avg').textContent = avg ? avg+'%' : '–';
+}
+
+// ── Shopping list ─────────────────────────────────────────────
+function saveList() { localStorage.setItem('ds-list', JSON.stringify(shoppingList)); }
+
+function renderList() {
+  const el = document.getElementById('shopping-list');
+  if (!shoppingList.length) {
+    el.innerHTML = '<div class="loading" style="padding:1rem 0">Noch keine Produkte auf der Liste</div>';
+    return;
+  }
+  el.innerHTML = shoppingList.map((item, i) => `
+    <div class="list-item">
+      <div style="font-size:18px;color:${item.onSale?'var(--green)':'var(--text3)'}">${item.onSale?'🏷':'○'}</div>
+      <div style="flex:1">
+        <div class="list-item-name">${item.name}</div>
+        <div class="list-item-cat">${item.cat}${item.onSale?' · <span class="sale-tag">Gerade in Aktion!</span>':''}</div>
+      </div>
+      <button class="del-btn" onclick="removeItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addListItem() {
+  const input = document.getElementById('list-input');
+  const cat = document.getElementById('cat-select').value;
+  const name = input.value.trim();
+  if (!name) return;
+  shoppingList.push({ name, cat, onSale: false });
+  saveList();
+  input.value = '';
+  renderList();
+  checkListMatches();
+}
+
+function removeItem(i) {
+  shoppingList.splice(i, 1);
+  saveList();
+  renderList();
+}
+
+document.getElementById('list-input').addEventListener('keydown', e => { if(e.key==='Enter') addListItem(); });
+
+function checkListMatches() {
+  if (!allDeals.length || !shoppingList.length) return;
+  shoppingList.forEach(item => {
+    item.onSale = allDeals.some(d => d.name.toLowerCase().includes(item.name.toLowerCase()));
+  });
+  saveList();
+  renderList();
+
+  const matches = allDeals.filter(d => shoppingList.some(i => d.name.toLowerCase().includes(i.name.toLowerCase())));
+  const card = document.getElementById('list-deals-card');
+  if (matches.length) {
+    card.style.display = 'block';
+    document.getElementById('list-deals').innerHTML = matches.map(d => `
+      <div class="deal-row">
+        <div class="deal-icon">${storeEmoji[(d.storeKey||'').toLowerCase()] || '🏪'}</div>
+        <div class="deal-info"><div class="deal-name">${d.name}</div><div class="deal-meta">${d.store}</div></div>
+        <div class="deal-prices"><div class="price-now">${fmt(d.price)}€</div>${d.priceWas?`<div class="price-was">${fmt(d.priceWas)}€</div>`:''}</div>
+        ${d.discountPct?`<span class="badge badge-green">-${d.discountPct}%</span>`:''}
+      </div>`).join('');
+  } else { card.style.display = 'none'; }
+}
+
+// ── Tracker ───────────────────────────────────────────────────
+let trackerDeals = [];
+
+function updateTrackerFromDeals(deals, q) {
+  deals.slice(0,8).forEach(d => {
+    if (!trackerDeals.find(t => t.id === d.id)) {
+      trackerDeals.push({ ...d, searchTerm: q });
+    }
+  });
+  renderTracker();
+}
+
+function renderTracker() {
+  const el = document.getElementById('tracker-list');
+  if (!trackerDeals.length) {
+    el.innerHTML = '<div class="loading" style="padding:.5rem 0">Noch keine Produkte gesucht</div>';
+  } else {
+    el.innerHTML = trackerDeals.map(d => `
+      <div class="tracker-row">
+        <span style="font-weight:500">${d.name}</span>
+        <span class="badge badge-blue" style="font-size:11px">${d.store}</span>
+        <span class="badge badge-green" style="font-size:11px">${d.discountPct?'-'+d.discountPct+'%':'–'}</span>
+        <span style="color:var(--text3);font-size:12px">${d.validUntil?formatDate(d.validUntil):'–'}</span>
+      </div>`).join('');
+  }
+  renderWeekPlanner();
+}
+
+function renderWeekPlanner() {
+  const days = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const scores = [3,5,7,4,9,10,6];
+  document.getElementById('week-planner').innerHTML = days.map((d,i) => `
+    <div class="bar-row">
+      <span style="font-size:12px;color:var(--text3);width:22px">${d}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${scores[i]*10}%;background:${scores[i]>=7?'var(--green-mid)':scores[i]>=5?'#f59e0b':'#e87070'}"></div></div>
+      <span style="font-size:12px;font-weight:500;color:${scores[i]>=7?'var(--green)':scores[i]>=5?'var(--amber)':'var(--red)'};width:80px">${scores[i]>=7?'⭐ Ideal':scores[i]>=5?'Gut':'Wenig'}</span>
+    </div>`).join('');
+}
+
+// ── Savings ───────────────────────────────────────────────────
+function renderSavings() {
+  const saved = savedDeals.reduce((s,d)=>s+(d.priceWas&&d.price?d.priceWas-d.price:0),0);
+  const spent = savedDeals.reduce((s,d)=>s+(d.price||0),0);
+  const rate = spent>0 ? Math.round((saved/(saved+spent))*100) : 0;
+  document.getElementById('s-saved').textContent = saved.toFixed(2).replace('.',',')+'€';
+  document.getElementById('s-spent').textContent = spent.toFixed(2).replace('.',',')+'€';
+  document.getElementById('s-rate').textContent = rate+'%';
+
+  if (!savedDeals.length) return;
+  const maxSpent = Math.max(...savedDeals.map(d=>d.price||0), 1);
+  document.getElementById('savings-bars').innerHTML = savedDeals.slice(-5).map(d => `
+    <div class="bar-row">
+      <span style="font-size:11px;color:var(--text3);width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</span>
+      <div class="bar-wrap">
+        <div class="bar-fill" style="width:${((d.price||0)/maxSpent)*100}%;background:var(--surface2)"></div>
+        <div class="bar-saved" style="width:${((d.priceWas&&d.price?d.priceWas-d.price:0)/maxSpent)*100}%"></div>
+      </div>
+      <span style="font-size:12px;color:var(--green);font-weight:500;width:50px;text-align:right">${d.priceWas&&d.price?(d.priceWas-d.price).toFixed(2).replace('.',',')+'€':'–'}</span>
+    </div>`).join('');
+}
+
+// ── Notifications ─────────────────────────────────────────────
+let notifications = [];
+function addNotification(text, isNew) {
+  notifications.unshift({ text, time: 'Gerade eben', isNew });
+  notifications = notifications.slice(0, 5);
+  document.getElementById('notif-list').innerHTML = notifications.map(n => `
+    <div class="notif">
+      <div class="notif-dot ${n.isNew?'':'read'}"></div>
+      <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+    </div>`).join('');
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmt(n) { return parseFloat(n||0).toFixed(2).replace('.',','); }
+function formatDate(s) {
+  if (!s) return '';
+  try { return new Date(s).toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}); }
+  catch { return s; }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  renderList();
+  renderTracker();
+  renderSavings();
+  await checkBackend();
+
+  // Load initial deals (popular Austrian products)
+  const initialQuery = 'Milch';
+  document.getElementById('search-input').value = initialQuery;
+  await searchDeals();
+}
+
+init();
+</script>
+</body>
+</html>
